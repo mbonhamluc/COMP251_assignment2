@@ -61,3 +61,81 @@ Once you have completed both items above, you will need to submit the link to yo
 ## Lab Resources
 - [W3 Schools SQL tutorial](https://www.w3schools.com/sql/)
 - [Make a ReadMe file Web-based Editor](https://www.makeareadme.com/)
+
+## Completed Work
+
+### Requirements
+
+#### Problem domain
+
+I have a growing inventory of servers, computers, and various network devices. I also have the added complexity of multiple switches, wireless access points (WAPs), and VLANs. When I add a new device or need to troubleshoot an issue, I can spend a lot of time trying to figure out what is already configured. Problems such as conflicting IP addresses or incorrect VLAN configuration can cause significant issues.
+
+To address this, I will create a database that tracks hosts, network devices, IP address assignments, and the connections between them within one managed network. A network device may be a switch or a WAP. A host, such as a server or workstation, may connect through a network interface controller (NIC) to a connection point provided by a network device. A connection point represents either a physical port or a wireless network identified by an SSID on a particular WAP.
+
+The database will maintain a list of hosts, including computers and other managed devices. Each host may have multiple NICs. Each NIC belongs to one host, may connect to one connection point, and may have zero or more IP addresses assigned to it. Each connection point belongs to one network device and may have zero or more VLAN assignments. The database will record current assignments so I can review how devices are connected and which IP addresses are already in use.
+
+#### Entity Descriptions
+
+- **HOST** is a managed device, such as a server or workstation, that can connect to the network through a **NIC**. The **HOST** has:
+  - A `host_id` that provides a unique identifier for the **HOST**.
+  - A `hostname` that records the name assigned to the **HOST**.
+  - A `description` that provides free text explaining what the **HOST** does.
+- **NIC** is a network interface belonging to a **HOST**. It records the interface's identity, its connection to a **CONNECTION_POINT**, and its relationship to assigned **IP** records. The **NIC** has:
+  - A `nic_id` that provides a unique identifier for the **NIC**.
+  - A `host_id` that identifies the **HOST** to which the **NIC** belongs.
+  - An `interface_name` that records the interface's name on the **HOST**, such as `eth0`. This name must be unique within that host.
+  - A `mac` that records the interface's MAC address. This address must be unique within the NIC inventory.
+  - A `connection_point_id` that identifies the **CONNECTION_POINT** connected to the **NIC**. This field is optional and is NULL when the NIC has no connection to a connection point represented in this database.
+- **IP** records an IP address assigned to a **NIC**. A NIC may have zero or more IP addresses, but each **IP** record belongs to exactly one NIC. The **IP** has:
+  - An `ip_id` that provides a unique identifier for the **IP** record.
+  - A `nic_id` that identifies the **NIC** to which the IP address is assigned.
+  - An `ip` that records the assigned IP address. This value must be unique within the managed network so the database cannot record the same address as assigned to multiple NICs.
+- **NETWORK_DEVICE** is a managed switch or WAP that provides connection points through which hosts can connect to the network. The **NETWORK_DEVICE** has:
+  - A `device_id` that provides a unique identifier for the **NETWORK_DEVICE**.
+  - A `device_type` that identifies whether the **NETWORK_DEVICE** is a switch or a WAP.
+  - A `name` that provides a name for the **NETWORK_DEVICE**.
+  - A `description` that provides free text for additional information about the **NETWORK_DEVICE**.
+- **CONNECTION_POINT** is a physical port or a wireless network offered by a **NETWORK_DEVICE**. A wireless connection point represents one SSID on one particular WAP. A wired connection point may connect to zero or one **NIC**, while a wireless connection point may connect to zero or more **NIC** records. Either type may have zero or more **VLAN** assignments. The **CONNECTION_POINT** has:
+  - A `connection_point_id` that provides a unique identifier for the **CONNECTION_POINT**.
+  - A `device_id` that identifies the **NETWORK_DEVICE** to which the connection point belongs.
+  - A `connection_type` that identifies whether the **CONNECTION_POINT** is wired or wireless.
+  - A `name` that identifies the physical port or wireless SSID, such as `Port 8` or `Office Wi-Fi`. This name must be unique within its network device.
+  - An `is_enabled` value that records whether the connection point is administratively enabled for use. It is true when enabled and false when disabled.
+- **VLAN** is a virtual local area network that defines a logical network segment. The **VLAN** has:
+  - A `vlan_id` that provides a unique identifier for the **VLAN** record in the database.
+  - A `vlan_tag` that records the numeric identifier used for the **VLAN** on the network. This value must be unique within the managed network.
+  - A `name` that provides a name for the **VLAN**.
+- **CONNECTION_POINT_VLAN** connects **CONNECTION_POINT** records to their assigned **VLAN** records. It is the associative entity that resolves the many-to-many relationship between connection points and VLANs. The **CONNECTION_POINT_VLAN** has:
+  - A `connection_point_id` that identifies the **CONNECTION_POINT** in the assignment.
+  - A `vlan_id` that identifies the **VLAN** assigned to that connection point.
+
+#### Relationships
+
+- A **HOST** may <ins>have</ins> zero or more **NIC** records. Each **NIC** must <ins>have</ins> exactly one **HOST**.
+- A **NIC** may be <ins>assigned</ins> zero or more **IP** records. Each **IP** record must be <ins>assigned</ins> to exactly one **NIC**.
+- A **NETWORK_DEVICE** may <ins>own</ins> zero or more **CONNECTION_POINT** records. Each **CONNECTION_POINT** must be <ins>owned</ins> by exactly one **NETWORK_DEVICE**.
+- A **NIC** may <ins>connect</ins> to zero or one **CONNECTION_POINT**. Each **CONNECTION_POINT** may <ins>connect</ins> to zero or more **NIC** records. For wired connection points, the maximum is one NIC.
+- A **CONNECTION_POINT** may <ins>have</ins> zero or more **CONNECTION_POINT_VLAN** records. Each **CONNECTION_POINT_VLAN** record must <ins>have</ins> exactly one **CONNECTION_POINT**.
+- A **VLAN** may <ins>have</ins> zero or more **CONNECTION_POINT_VLAN** records. Each **CONNECTION_POINT_VLAN** record must <ins>have</ins> exactly one **VLAN**.
+
+#### Assumptions
+
+- Does the database represent one managed network? **YES**
+- Must each IP address be unique across the managed network, even when devices are assigned to different **VLAN** records? **YES**
+- Does the database record only current configuration and assignments, without maintaining a history of previous configurations? **YES**
+- Can a **NETWORK_DEVICE** represent either a switch or a WAP? **YES**
+- Can a WAP have both wired and wireless **CONNECTION_POINT** records? **YES**
+- Does each wireless **CONNECTION_POINT** represent one SSID offered by one particular WAP? **YES**
+- Can the same SSID be recorded on different WAPs as separate **CONNECTION_POINT** records? **YES**
+- Can a **HOST** be recorded before any **NIC** records are associated with it? **YES**
+- Can a **NETWORK_DEVICE** be recorded before its **CONNECTION_POINT** records are entered? **YES**
+- Can a **NIC** have no **IP** records assigned to it? **YES**
+- Can a **NIC** have more than one **IP** record assigned to it? **YES**
+- Can `connection_point_id` be NULL when a **NIC** has no connection to a connection point represented in this database, even if it has network connectivity through another device or interface? **YES**
+- Must a wired **CONNECTION_POINT** connect to at most one **NIC** at a time? **YES**
+- Can a wireless **CONNECTION_POINT** connect to multiple **NIC** records at the same time? **YES**
+- Can a **VLAN** exist without being assigned to any **CONNECTION_POINT** records? **YES**
+- Can a **CONNECTION_POINT** have no **VLAN** assignments or have multiple **VLAN** assignments? **YES**
+- Can a **NIC** retain its assigned **IP** records while disconnected from a **CONNECTION_POINT**? **YES**
+- Can a **CONNECTION_POINT** retain its **VLAN** assignments when no NIC is connected or when `is_enabled` is false? **YES**
+- Must the combination of `connection_point_id` and `vlan_id` be unique in **CONNECTION_POINT_VLAN**, preventing duplicate assignments of the same VLAN to the same connection point? **YES**
