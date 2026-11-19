@@ -162,12 +162,14 @@ SELECT *
 FROM host
 WHERE description LIKE '%server%';
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/2.png" alt="result 2"/>
 
 ```
 -- 3 - Count the total number of hosts in the inventory.
 SELECT COUNT(*) AS total_hosts
 FROM host;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/3.png" alt="result 3"/>
 
 #### SQL for NIC
 
@@ -177,6 +179,7 @@ SELECT *
 FROM NIC
 WHERE CONNECTION_POINT_connection_point_id IS NULL;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/4.png" alt="result 4"/>
 
 ```
 -- 5 - List network interfaces with their hostnames and MAC addresses.
@@ -185,6 +188,7 @@ FROM NIC
 JOIN HOST ON NIC.HOST_host_id = HOST.host_id
 ORDER BY HOST.hostname, NIC.interface_name;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/5.png" alt="result 5"/>
 
 ```
 -- 6 - Count network interfaces for each host, including hosts with none.
@@ -194,6 +198,7 @@ LEFT JOIN NIC ON HOST.host_id = NIC.HOST_host_id
 GROUP BY HOST.host_id, HOST.hostname
 ORDER BY HOST.hostname;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/6.png" alt="result 6"/>
 
 #### SQL for IP
 
@@ -205,6 +210,7 @@ JOIN NIC ON IP.NIC_nic_id = NIC.nic_id
 JOIN HOST ON NIC.HOST_host_id = HOST.host_id
 ORDER BY HOST.hostname, NIC.interface_name, IP.ip;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/7.png" alt="result 7"/>
 
 ```
 -- 8 - Find IP addresses that begin with 10.0.10.
@@ -212,6 +218,7 @@ SELECT *
 FROM IP
 WHERE IP.ip LIKE '10.0.10.%';
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/8.png" alt="result 8"/>
 
 ```
 -- 9 - Find network interfaces with more than one assigned IP address.
@@ -223,6 +230,7 @@ GROUP BY HOST.host_id, HOST.hostname, NIC.nic_id, NIC.interface_name
 HAVING COUNT(IP.ip_id) > 1
 ORDER BY HOST.hostname, NIC.interface_name;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/9.png" alt="result 9"/>
 
 #### SQL for NETWORK_DEVICE
 
@@ -232,6 +240,7 @@ SELECT name, device_type, description
 FROM NETWORK_DEVICE
 ORDER BY device_type, name;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/10.png" alt="result 10"/>
 
 ```
 -- 11 - Count connection points for each device by connection type.
@@ -244,6 +253,7 @@ GROUP BY NETWORK_DEVICE.device_id, NETWORK_DEVICE.name,
          CONNECTION_POINT.connection_type
 ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.connection_type;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/11.png" alt="result 11"/>
 
 ```
 -- 12 - List devices and their disabled connection points.
@@ -256,6 +266,7 @@ JOIN CONNECTION_POINT
 WHERE CONNECTION_POINT.is_enabled = 0
 ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/12.png" alt="result 12"/>
 
 #### SQL for CONNECTION_POINT
 
@@ -273,6 +284,7 @@ WHERE CONNECTION_POINT.connection_type = 'WIRED'
   AND NIC.nic_id IS NULL
 ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/13.png" alt="result 13"/>
 
 ```
 -- 14 - Count connected NICs for each wireless connection point, including those with none.
@@ -289,6 +301,7 @@ GROUP BY NETWORK_DEVICE.device_id, NETWORK_DEVICE.name,
          CONNECTION_POINT.connection_point_id, CONNECTION_POINT.name
 ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/14.png" alt="result 14"/>
 
 ```
 -- 15 - Find connection points with no VLAN assigned.
@@ -303,6 +316,7 @@ LEFT JOIN CONNECTION_POINT_VLAN
 WHERE CONNECTION_POINT_VLAN.VLAN_vlan_id IS NULL
 ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/15.png" alt="result 15"/>
 
 #### SQL for VLAN
 
@@ -312,6 +326,7 @@ SELECT vlan_tag, name
 FROM VLAN
 ORDER BY vlan_tag;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/16.png" alt="result 16"/>
 
 ```
 -- 17 - Count connection points assigned to each VLAN, including VLANs with none.
@@ -323,6 +338,7 @@ LEFT JOIN CONNECTION_POINT_VLAN
 GROUP BY VLAN.vlan_id, VLAN.vlan_tag, VLAN.name
 ORDER BY VLAN.vlan_tag;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/17.png" alt="result 17"/>
 
 ```
 -- 18 - List VLANs assigned to wireless connection points and their devices.
@@ -339,6 +355,7 @@ JOIN NETWORK_DEVICE
 WHERE CONNECTION_POINT.connection_type = 'WIRELESS'
 ORDER BY VLAN.vlan_tag, NETWORK_DEVICE.name, CONNECTION_POINT.name;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/18.png" alt="result 18"/>
 
 #### SQL for CONNECTION_POINT_VLAN
 
@@ -357,6 +374,7 @@ JOIN VLAN
     ON CONNECTION_POINT_VLAN.VLAN_vlan_id = VLAN.vlan_id
 ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name, VLAN.vlan_tag;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/19.png" alt="result 19"/>
 
 ```
 -- 20 - Find connection points with more than one VLAN assigned.
@@ -373,6 +391,7 @@ GROUP BY NETWORK_DEVICE.device_id, NETWORK_DEVICE.name,
 HAVING COUNT(CONNECTION_POINT_VLAN.VLAN_vlan_id) > 1
 ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/20.png" alt="result 20"/>
 
 ```
 -- 21 - List VLAN assignments that remain on disabled connection points.
@@ -390,6 +409,7 @@ JOIN VLAN
 WHERE CONNECTION_POINT.is_enabled = 0
 ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name, VLAN.vlan_tag;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/21.png" alt="result 21"/>
 
 #### Though the assignment doesn't ask for it, I figured some data changes are helpful
 
@@ -406,6 +426,7 @@ SELECT host_id, hostname, description
 FROM HOST
 WHERE host_id = 4;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/22.png" alt="result 22"/>
 
 ```
 -- Enable connection point 8.
@@ -420,3 +441,4 @@ SELECT connection_point_id, name, is_enabled
 FROM CONNECTION_POINT
 WHERE connection_point_id = 8;
 ```
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/results/23.png" alt="result 23"/>
