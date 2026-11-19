@@ -142,4 +142,4 @@ The database will maintain a list of hosts, including computers and other manage
 
 ### Deliverable 2 - ERD
 
-<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/ERD.png?v=2" alt="network ERD"/>
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/ERD2.png" alt="network ERD"/>
