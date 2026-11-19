@@ -64,7 +64,7 @@ Once you have completed both items above, you will need to submit the link to yo
 
 ## Completed Work
 
-### Requirements
+### Deliverable 1 - Requirements
 
 #### Problem domain
 
@@ -83,13 +83,13 @@ The database will maintain a list of hosts, including computers and other manage
 - **NIC** is a network interface belonging to a **HOST**. It records the interface's identity, its connection to a **CONNECTION_POINT**, and its relationship to assigned **IP** records. The **NIC** has:
   - A `nic_id` that provides a unique identifier for the **NIC**.
   - A `host_id` that identifies the **HOST** to which the **NIC** belongs.
-  - An `interface_name` that records the interface's name on the **HOST**, such as `eth0`. This name must be unique within that host.
+  - An `interface_name` that records the interface's name on the **HOST**, such as `eth0`.
   - A `mac` that records the interface's MAC address. This address must be unique within the NIC inventory.
   - A `connection_point_id` that identifies the **CONNECTION_POINT** connected to the **NIC**. This field is optional and is NULL when the NIC has no connection to a connection point represented in this database.
 - **IP** records an IP address assigned to a **NIC**. A NIC may have zero or more IP addresses, but each **IP** record belongs to exactly one NIC. The **IP** has:
   - An `ip_id` that provides a unique identifier for the **IP** record.
   - A `nic_id` that identifies the **NIC** to which the IP address is assigned.
-  - An `ip` that records the assigned IP address. This value must be unique within the managed network so the database cannot record the same address as assigned to multiple NICs.
+  - An `ip` that records the assigned IP address.
 - **NETWORK_DEVICE** is a managed switch or WAP that provides connection points through which hosts can connect to the network. The **NETWORK_DEVICE** has:
   - A `device_id` that provides a unique identifier for the **NETWORK_DEVICE**.
   - A `device_type` that identifies whether the **NETWORK_DEVICE** is a switch or a WAP.
@@ -99,11 +99,11 @@ The database will maintain a list of hosts, including computers and other manage
   - A `connection_point_id` that provides a unique identifier for the **CONNECTION_POINT**.
   - A `device_id` that identifies the **NETWORK_DEVICE** to which the connection point belongs.
   - A `connection_type` that identifies whether the **CONNECTION_POINT** is wired or wireless.
-  - A `name` that identifies the physical port or wireless SSID, such as `Port 8` or `Office Wi-Fi`. This name must be unique within its network device.
+  - A `name` that identifies the physical port or wireless SSID, such as `Port 8` or `Office Wi-Fi`.
   - An `is_enabled` value that records whether the connection point is administratively enabled for use. It is true when enabled and false when disabled.
 - **VLAN** is a virtual local area network that defines a logical network segment. The **VLAN** has:
   - A `vlan_id` that provides a unique identifier for the **VLAN** record in the database.
-  - A `vlan_tag` that records the numeric identifier used for the **VLAN** on the network. This value must be unique within the managed network.
+  - A `vlan_tag` that records the numeric identifier used for the **VLAN** on the network.
   - A `name` that provides a name for the **VLAN**.
 - **CONNECTION_POINT_VLAN** connects **CONNECTION_POINT** records to their assigned **VLAN** records. It is the associative entity that resolves the many-to-many relationship between connection points and VLANs. The **CONNECTION_POINT_VLAN** has:
   - A `connection_point_id` that identifies the **CONNECTION_POINT** in the assignment.
@@ -139,3 +139,7 @@ The database will maintain a list of hosts, including computers and other manage
 - Can a **NIC** retain its assigned **IP** records while disconnected from a **CONNECTION_POINT**? **YES**
 - Can a **CONNECTION_POINT** retain its **VLAN** assignments when no NIC is connected or when `is_enabled` is false? **YES**
 - Must the combination of `connection_point_id` and `vlan_id` be unique in **CONNECTION_POINT_VLAN**, preventing duplicate assignments of the same VLAN to the same connection point? **YES**
+
+### Deliverable 2 - ERD
+
+<img src="https://github.com/mbonhamluc/COMP251_assignment2/blob/main/ERD.png" alt="network ERD"/>
