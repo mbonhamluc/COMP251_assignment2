@@ -307,3 +307,227 @@ SELECT 'IP' AS table_name, COUNT(*) AS row_count FROM IP
 UNION ALL
 SELECT 'CONNECTION_POINT_VLAN' AS table_name, COUNT(*) AS row_count FROM CONNECTION_POINT_VLAN;
 
+-- SQL for HOST
+
+-- 1 - List all hosts alphabetically by hostname.
+SELECT *
+FROM host
+ORDER BY hostname;
+
+-- 2 - Find hosts with "server" in their description.
+SELECT *
+FROM host
+WHERE description LIKE '%server%';
+
+-- 3 - Count the total number of hosts in the inventory.
+SELECT COUNT(*) AS total_hosts
+FROM host;
+
+-- SQL for NIC
+
+-- 4 - Find network interfaces with no connection point assigned.
+SELECT *
+FROM NIC
+WHERE CONNECTION_POINT_connection_point_id IS NULL;
+
+-- 5 - List network interfaces with their hostnames and MAC addresses.
+SELECT HOST.hostname, NIC.interface_name, NIC.mac
+FROM NIC
+JOIN HOST ON NIC.HOST_host_id = HOST.host_id
+ORDER BY HOST.hostname, NIC.interface_name;
+
+-- 6 - Count network interfaces for each host, including hosts with none.
+SELECT HOST.hostname, COUNT(NIC.nic_id) AS total_interfaces
+FROM HOST
+LEFT JOIN NIC ON HOST.host_id = NIC.HOST_host_id
+GROUP BY HOST.host_id, HOST.hostname
+ORDER BY HOST.hostname;
+
+-- SQL for IP
+
+-- 7 - List IP addresses with their hostnames and interface names.
+SELECT HOST.hostname, NIC.interface_name, IP.ip
+FROM IP
+JOIN NIC ON IP.NIC_nic_id = NIC.nic_id
+JOIN HOST ON NIC.HOST_host_id = HOST.host_id
+ORDER BY HOST.hostname, NIC.interface_name, IP.ip;
+
+-- 8 - Find IP addresses that begin with 10.0.10.
+SELECT *
+FROM IP
+WHERE IP.ip LIKE '10.0.10.%';
+
+-- 9 - Find network interfaces with more than one assigned IP address.
+SELECT HOST.hostname, NIC.interface_name, COUNT(IP.ip_id) AS total_ip_addresses
+FROM IP
+JOIN NIC ON IP.NIC_nic_id = NIC.nic_id
+JOIN HOST ON NIC.HOST_host_id = HOST.host_id
+GROUP BY HOST.host_id, HOST.hostname, NIC.nic_id, NIC.interface_name
+HAVING COUNT(IP.ip_id) > 1
+ORDER BY HOST.hostname, NIC.interface_name;
+
+-- SQL for NETWORK_DEVICE
+
+-- 10 - List network devices by type and name.
+SELECT name, device_type, description
+FROM NETWORK_DEVICE
+ORDER BY device_type, name;
+
+-- 11 - Count connection points for each device by connection type.
+SELECT NETWORK_DEVICE.name, CONNECTION_POINT.connection_type,
+       COUNT(CONNECTION_POINT.connection_point_id) AS total_connection_points
+FROM NETWORK_DEVICE
+LEFT JOIN CONNECTION_POINT
+    ON NETWORK_DEVICE.device_id = CONNECTION_POINT.NETWORK_DEVICE_device_id
+GROUP BY NETWORK_DEVICE.device_id, NETWORK_DEVICE.name,
+         CONNECTION_POINT.connection_type
+ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.connection_type;
+
+-- 12 - List devices and their disabled connection points.
+SELECT NETWORK_DEVICE.name AS device_name,
+       CONNECTION_POINT.name AS connection_point_name,
+       CONNECTION_POINT.connection_type
+FROM NETWORK_DEVICE
+JOIN CONNECTION_POINT
+    ON NETWORK_DEVICE.device_id = CONNECTION_POINT.NETWORK_DEVICE_device_id
+WHERE CONNECTION_POINT.is_enabled = 0
+ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name;
+
+-- SQL for CONNECTION_POINT
+
+-- 13 - Find enabled wired connection points with no NIC connected.
+SELECT NETWORK_DEVICE.name AS device_name,
+       CONNECTION_POINT.name AS connection_point_name
+FROM CONNECTION_POINT
+JOIN NETWORK_DEVICE
+    ON CONNECTION_POINT.NETWORK_DEVICE_device_id = NETWORK_DEVICE.device_id
+LEFT JOIN NIC
+    ON CONNECTION_POINT.connection_point_id = NIC.CONNECTION_POINT_connection_point_id
+WHERE CONNECTION_POINT.connection_type = 'WIRED'
+  AND CONNECTION_POINT.is_enabled = 1
+  AND NIC.nic_id IS NULL
+ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name;
+
+-- 14 - Count connected NICs for each wireless connection point, including those with none.
+SELECT NETWORK_DEVICE.name AS device_name,
+       CONNECTION_POINT.name AS ssid,
+       COUNT(NIC.nic_id) AS total_connected_nics
+FROM CONNECTION_POINT
+JOIN NETWORK_DEVICE
+    ON CONNECTION_POINT.NETWORK_DEVICE_device_id = NETWORK_DEVICE.device_id
+LEFT JOIN NIC
+    ON CONNECTION_POINT.connection_point_id = NIC.CONNECTION_POINT_connection_point_id
+WHERE CONNECTION_POINT.connection_type = 'WIRELESS'
+GROUP BY NETWORK_DEVICE.device_id, NETWORK_DEVICE.name,
+         CONNECTION_POINT.connection_point_id, CONNECTION_POINT.name
+ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name;
+
+-- 15 - Find connection points with no VLAN assigned.
+SELECT NETWORK_DEVICE.name AS device_name,
+       CONNECTION_POINT.name AS connection_point_name,
+       CONNECTION_POINT.connection_type
+FROM CONNECTION_POINT
+JOIN NETWORK_DEVICE
+    ON CONNECTION_POINT.NETWORK_DEVICE_device_id = NETWORK_DEVICE.device_id
+LEFT JOIN CONNECTION_POINT_VLAN
+    ON CONNECTION_POINT.connection_point_id = CONNECTION_POINT_VLAN.CONNECTION_POINT_connection_point_id
+WHERE CONNECTION_POINT_VLAN.VLAN_vlan_id IS NULL
+ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name;
+
+-- SQL for VLAN
+
+-- 16 - List defined VLANs by VLAN tag.
+SELECT vlan_tag, name
+FROM VLAN
+ORDER BY vlan_tag;
+
+-- 17 - Count connection points assigned to each VLAN, including VLANs with none.
+SELECT VLAN.vlan_tag, VLAN.name,
+       COUNT(CONNECTION_POINT_VLAN.CONNECTION_POINT_connection_point_id) AS total_connection_points
+FROM VLAN
+LEFT JOIN CONNECTION_POINT_VLAN
+    ON VLAN.vlan_id = CONNECTION_POINT_VLAN.VLAN_vlan_id
+GROUP BY VLAN.vlan_id, VLAN.vlan_tag, VLAN.name
+ORDER BY VLAN.vlan_tag;
+
+-- 18 - List VLANs assigned to wireless connection points and their devices.
+SELECT VLAN.vlan_tag, VLAN.name AS vlan_name,
+       NETWORK_DEVICE.name AS device_name,
+       CONNECTION_POINT.name AS ssid
+FROM VLAN
+JOIN CONNECTION_POINT_VLAN
+    ON VLAN.vlan_id = CONNECTION_POINT_VLAN.VLAN_vlan_id
+JOIN CONNECTION_POINT
+    ON CONNECTION_POINT_VLAN.CONNECTION_POINT_connection_point_id = CONNECTION_POINT.connection_point_id
+JOIN NETWORK_DEVICE
+    ON CONNECTION_POINT.NETWORK_DEVICE_device_id = NETWORK_DEVICE.device_id
+WHERE CONNECTION_POINT.connection_type = 'WIRELESS'
+ORDER BY VLAN.vlan_tag, NETWORK_DEVICE.name, CONNECTION_POINT.name;
+
+-- SQL for CONNECTION_POINT_VLAN
+
+-- 19 - List VLAN assignments with device and connection point names.
+SELECT NETWORK_DEVICE.name AS device_name,
+       CONNECTION_POINT.name AS connection_point_name,
+       VLAN.vlan_tag,
+       VLAN.name AS vlan_name
+FROM CONNECTION_POINT_VLAN
+JOIN CONNECTION_POINT
+    ON CONNECTION_POINT_VLAN.CONNECTION_POINT_connection_point_id = CONNECTION_POINT.connection_point_id
+JOIN NETWORK_DEVICE
+    ON CONNECTION_POINT.NETWORK_DEVICE_device_id = NETWORK_DEVICE.device_id
+JOIN VLAN
+    ON CONNECTION_POINT_VLAN.VLAN_vlan_id = VLAN.vlan_id
+ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name, VLAN.vlan_tag;
+
+-- 20 - Find connection points with more than one VLAN assigned.
+SELECT NETWORK_DEVICE.name AS device_name,
+       CONNECTION_POINT.name AS connection_point_name,
+       COUNT(CONNECTION_POINT_VLAN.VLAN_vlan_id) AS total_vlans
+FROM CONNECTION_POINT_VLAN
+JOIN CONNECTION_POINT
+    ON CONNECTION_POINT_VLAN.CONNECTION_POINT_connection_point_id = CONNECTION_POINT.connection_point_id
+JOIN NETWORK_DEVICE
+    ON CONNECTION_POINT.NETWORK_DEVICE_device_id = NETWORK_DEVICE.device_id
+GROUP BY NETWORK_DEVICE.device_id, NETWORK_DEVICE.name,
+         CONNECTION_POINT.connection_point_id, CONNECTION_POINT.name
+HAVING COUNT(CONNECTION_POINT_VLAN.VLAN_vlan_id) > 1
+ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name;
+
+-- 21 - List VLAN assignments that remain on disabled connection points.
+SELECT NETWORK_DEVICE.name AS device_name,
+       CONNECTION_POINT.name AS connection_point_name,
+       VLAN.vlan_tag,
+       VLAN.name AS vlan_name
+FROM CONNECTION_POINT_VLAN
+JOIN CONNECTION_POINT
+    ON CONNECTION_POINT_VLAN.CONNECTION_POINT_connection_point_id = CONNECTION_POINT.connection_point_id
+JOIN NETWORK_DEVICE
+    ON CONNECTION_POINT.NETWORK_DEVICE_device_id = NETWORK_DEVICE.device_id
+JOIN VLAN
+    ON CONNECTION_POINT_VLAN.VLAN_vlan_id = VLAN.vlan_id
+WHERE CONNECTION_POINT.is_enabled = 0
+ORDER BY NETWORK_DEVICE.name, CONNECTION_POINT.name, VLAN.vlan_tag;
+
+-- Though the assignment doesn't ask for it, I figured some data changes are helpful
+
+-- Update the description of the network storage host.
+UPDATE HOST
+SET description = 'Primary network storage and nightly backups'
+WHERE host_id = 4;
+
+-- 22 - Verify the updated host description.
+SELECT host_id, hostname, description
+FROM HOST
+WHERE host_id = 4;
+
+
+-- Enable connection point 8.
+UPDATE CONNECTION_POINT
+SET is_enabled = 1
+WHERE connection_point_id = 8;
+
+-- 23 - Verify that the connection point is enabled.
+SELECT connection_point_id, name, is_enabled
+FROM CONNECTION_POINT
+WHERE connection_point_id = 8;
